@@ -1,11 +1,15 @@
-# Finance Dashboard
+# HV Finance Dashboard
 
-A minimalist, locally hosted personal finance dashboard for Chase and Bank of America CSV exports.
+> ⚠️ **Early build** — functional and actively used, but still in development. Features may change and some banks are not yet supported.
+
+A locally hosted personal finance dashboard that parses Chase and Bank of America CSV exports, auto-categorizes transactions, and visualizes spending over time.
+
+---
 
 ## Setup
 
 ```bash
-# 1. Install Flask (only dependency)
+# 1. Install the only dependency
 pip install flask
 
 # 2. Run
@@ -15,28 +19,58 @@ python app.py
 http://localhost:5000
 ```
 
-## Usage
-
-1. **Upload** — click `+ Upload CSV` and drop in one or more statement CSVs. The app auto-detects the bank.
-2. **Filter** — use the bank buttons, date presets (YTD / Q1–Q4 / Monthly / Custom), or the search bar.
-3. **Categorize** — change a transaction's category inline via the dropdown, or click **⊕ Similar** to apply a category to all transactions from the same payee at once.
-4. **Rules** — when you use **⊕ Similar**, check *"Remember this rule"* to save it. Future uploads will auto-apply the rule. View/delete rules via the **Rules** button.
+---
 
 ## Supported Banks
 
-| Bank | How to export |
-|------|--------------|
-| **Chase** | Account → Download → CSV |
-| **Bank of America** | Statements & Documents → Download → CSV |
+| Bank | Account Type | Format |
+|------|-------------|--------|
+| Chase | Checking | ✅ |
+| Chase | Credit Card | ✅ |
+| Bank of America | Checking | ✅ |
+| Bank of America | Credit Card (standard export) | ✅ |
+| Bank of America | Credit Card (CardHolder Name export) | ✅ |
+| Wells Fargo | Any | ❌ Not yet supported |
+| Amex / Apple Card | Any | ❌ Not yet supported |
 
-## Categories
+Upload multiple CSVs at once — the app auto-detects the bank from the file format.
 
-**Income:** Income · Zelle In · ATM Deposit · Investment In · Tax Refund · Wire Transfer In · Cash Rewards · Other Income
+---
 
-**Expenses:** Credit Card Payment · Zelle Out · Rent/Mortgage · Investment Out · Groceries · Utilities · Insurance · Bank Fee · Taxes · Wire Transfer Out · ATM Withdrawal · Other Expense
+## Features
 
-**Hidden by default:** Internal Transfer (toggle visible via the switch in the filter bar)
+**Transactions**
+- Auto-categorization on upload using rule-based pattern matching
+- Inline category editing per transaction
+- ⊕ Similar — mass-categorize all transactions matching a payee pattern in one click
+- Rules modal — view and delete saved auto-categorization rules
+- Search, filter by category, sort by date or amount
+- Ignore category — excludes transactions from income/expense totals without hiding them
 
-## Data
+**Dashboard**
+- Income / Expenses / Net summary cards
+- Investment tracking card (Webull, Wealthfront) — tracks deposits, withdrawals, and net invested separately from regular income/expenses
+- Income and expense donut charts
+- Trends line chart — income vs expenses over time with toggleable net line
+- Bar chart — stacked expenses by category or income vs expenses side by side
+- All charts support Day / Week / Month / Quarter granularity
 
-All data is stored locally in `data/finance.db` (SQLite). The `data/` folder is gitignored so your financial data is never committed to version control.
+**Filtering**
+- Filter by bank account
+- Date presets: All Time, YTD, Q1–Q4, monthly picker, or custom range
+- Show/hide internal transfers toggle
+- Chase CC payments automatically hidden from checking to prevent double-counting
+
+---
+
+## Data & Privacy
+
+All data is stored locally in a SQLite database (`finance.db`). Nothing is sent to any external server.
+
+---
+
+## Known Limitations
+
+- Wells Fargo and Amex/Apple Card CSV formats are not yet supported
+- No mobile layout — designed for desktop use
+- Budget planning tab is planned but not yet implemented
