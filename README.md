@@ -1,7 +1,6 @@
 # HV Finance Dashboard
 
-> ⚠️ **Early build**
-> Functional and actively used, but still in development. Features may change and some banks are not yet supported.
+> ⚠️ **Early build** functional and actively used, but still in development. Features may change and some banks are not yet supported.
 
 A locally hosted personal finance dashboard that parses Chase and Bank of America CSV exports, auto-categorizes transactions, and visualizes spending over time.
 
@@ -43,7 +42,7 @@ Upload multiple CSVs at once, the app auto-detects the bank from the file format
 **Transactions**
 - Auto-categorization on upload using rule-based pattern matching
 - Inline category editing per transaction
-- Use ⊕ Similar to mass-categorize all transactions matching a payee pattern in one click
+- Use "⊕ Similar" to mass-categorize all transactions matching a payee pattern in one click
 - Rules module allows for viewing and deletion of saved auto-categorization rules
 - Search, filter by category, sort by date or amount
 - "Ignore category" excludes transactions from income/expense totals without hiding them
