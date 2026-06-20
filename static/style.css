@@ -358,6 +358,14 @@ main {
   text-align: center;
 }
 
+/* Empty state inside trends/bar wraps sits centered */
+.trends-wrap .chart-empty,
+.bar-wrap .chart-empty {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 /* ── BREAKDOWN ─────────────────────────────────────────────────────────────── */
 .breakdown-card { padding: 0; overflow: hidden; margin-bottom: 20px; }
 

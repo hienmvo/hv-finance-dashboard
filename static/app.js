@@ -358,14 +358,18 @@ function fmtTrendLabel(period, gran) {
 }
 
 function renderTrendsChart(d) {
-  const ctx = document.getElementById('trends-chart');
-  if (!ctx) return;
+  const canvas   = document.getElementById('trends-chart');
+  const emptyEl  = document.getElementById('trends-empty');
+  if (!canvas) return;
   if (S.trendsChart) { S.trendsChart.destroy(); S.trendsChart = null; }
 
   if (!d.periods || d.periods.length === 0) {
-    ctx.parentElement.innerHTML = '<div class="chart-empty">No data for this period</div>';
+    canvas.style.display = 'none';
+    emptyEl.classList.remove('hidden');
     return;
   }
+  canvas.style.display = '';
+  emptyEl.classList.add('hidden');
 
   const labels  = d.periods.map(p => fmtTrendLabel(p, S.trendsGranularity));
   const net     = d.income.map((inc, i) => +(inc - d.expenses[i]).toFixed(2));
@@ -408,7 +412,7 @@ function renderTrendsChart(d) {
     });
   }
 
-  S.trendsChart = new Chart(ctx, {
+  S.trendsChart = new Chart(canvas, {
     type: 'line',
     data: { labels, datasets },
     options: {
@@ -465,14 +469,18 @@ async function loadBarChart() {
 }
 
 function renderBarChart(d) {
-  const ctx = document.getElementById('bar-chart');
-  if (!ctx) return;
+  const canvas  = document.getElementById('bar-chart');
+  const emptyEl = document.getElementById('bar-empty');
+  if (!canvas) return;
   if (S.barChart) { S.barChart.destroy(); S.barChart = null; }
 
   if (!d.periods || d.periods.length === 0) {
-    ctx.parentElement.innerHTML = '<div class="chart-empty" style="padding:60px 0">No data for this period</div>';
+    canvas.style.display = 'none';
+    emptyEl.classList.remove('hidden');
     return;
   }
+  canvas.style.display = '';
+  emptyEl.classList.add('hidden');
 
   const labels = d.periods.map(p => fmtTrendLabel(p, S.barGranularity));
   let datasets;
@@ -512,7 +520,7 @@ function renderBarChart(d) {
       }));
   }
 
-  S.barChart = new Chart(ctx, {
+  S.barChart = new Chart(canvas, {
     type: 'bar',
     data: { labels, datasets },
     options: {
@@ -773,6 +781,7 @@ async function uploadFiles(files) {
     }).join('');
 
     showDashboard();
+    await new Promise(r => requestAnimationFrame(r));
     await refresh();
   } catch (err) {
     resultsEl.innerHTML = `<p style="color:var(--expense)">Upload failed: ${err.message}</p>`;
