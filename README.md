@@ -27,7 +27,7 @@ http://localhost:5000
 |------|-------------|--------|
 | Chase | Checking | ✅ |
 | Chase | Credit Card | ✅ |
-| Bank of America | Checking | ✅ |
+| Bank of America | Checking | ⚠️ |
 | Bank of America | Credit Card (standard export) | ⚠️ |
 | Bank of America | Credit Card (CardHolder Name export) | ⚠️ |
 | Wells Fargo | Any | ❌ Not yet supported |
