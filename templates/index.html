@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <svg class="logo-svg" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="30" height="30" rx="7" fill="var(--primary)"/>
+      <text x="15" y="15" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="11" font-weight="700" letter-spacing="0.5" font-family="'DM Sans', sans-serif">HV</text>
+    </svg>
+    <h1>Finance Dashboard</h1>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="openRulesModal()">Rules</button>
+    <button class="btn btn-primary" onclick="openUploadModal()">+ Upload CSV</button>
+  </div>
+</header>
+
+<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="empty-state">
+    <div class="empty-icon">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="56" height="56" rx="14" fill="var(--border)"/>
+        <text x="28" y="28" text-anchor="middle" dominant-baseline="middle" fill="var(--muted-lt)" font-size="20" font-weight="700" letter-spacing="1" font-family="'DM Sans', sans-serif">HV</text>
+      </svg>
+    </div>
+    <h2>No data yet</h2>
+    <p>Upload a Chase or Bank of America CSV export to get started.</p>
+    <button class="btn btn-primary" onclick="openUploadModal()">Upload CSV</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden">
+
+    <!-- Bank + internal filter bar -->
+    <div class="filter-bar">
+      <div id="bank-filters" class="bank-filters"></div>
+      <div class="spacer"></div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="show-internal" onchange="toggleInternal()" />
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        <span class="toggle-label">Show internal transfers</span>
+      </label>
+    </div>
+
+    <!-- Date range bar -->
+    <div class="date-bar">
+      <div class="date-presets">
+        <button class="preset active" data-p="all"  onclick="setPreset('all')">All Time</button>
+        <button class="preset"        data-p="ytd"  onclick="setPreset('ytd')">YTD</button>
+        <button class="preset"        data-p="q1"   onclick="setPreset('q1')">Q1</button>
+        <button class="preset"        data-p="q2"   onclick="setPreset('q2')">Q2</button>
+        <button class="preset"        data-p="q3"   onclick="setPreset('q3')">Q3</button>
+        <button class="preset"        data-p="q4"   onclick="setPreset('q4')">Q4</button>
+        <select id="month-select" onchange="setMonth(this.value)">
+          <option value="">Month…</option>
+        </select>
+      </div>
+      <div class="date-custom">
+        <input type="date" id="start-date" onchange="setCustomDate()" />
+        <span class="date-sep">–</span>
+        <input type="date" id="end-date"   onchange="setCustomDate()" />
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+      <div class="card summary-card">
+        <div class="s-label">Total Income</div>
+        <div class="s-value income" id="total-income">$0.00</div>
+      </div>
+      <div class="card summary-card">
+        <div class="s-label">Total Expenses</div>
+        <div class="s-value expense" id="total-expenses">$0.00</div>
+      </div>
+      <div class="card summary-card">
+        <div class="s-label">Net</div>
+        <div class="s-value" id="total-net">$0.00</div>
+      </div>
+    </div>
+
+    <!-- Investments card -->
+    <div class="card invest-card hidden" id="invest-card">
+      <div class="invest-label">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="invest-icon">
+          <rect width="24" height="24" rx="6" fill="var(--primary)"/>
+          <text x="12" y="12" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="8.5" font-weight="700" letter-spacing="0.3" font-family="'DM Sans', sans-serif">HV</text>
+        </svg>
+        <div>
+          <div class="invest-title">Investments</div>
+          <div class="invest-platforms" id="invest-platforms"></div>
+        </div>
+      </div>
+      <div class="invest-metrics">
+        <div class="invest-metric">
+          <div class="im-label">Deposited</div>
+          <div class="im-value" id="inv-deposited">$0.00</div>
+          <div class="im-sub">sent to investments</div>
+        </div>
+        <div class="invest-divider"></div>
+        <div class="invest-metric">
+          <div class="im-label">Withdrawn</div>
+          <div class="im-value" id="inv-withdrawn">$0.00</div>
+          <div class="im-sub">returned to checking</div>
+        </div>
+        <div class="invest-divider"></div>
+        <div class="invest-metric">
+          <div class="im-label">Net Invested</div>
+          <div class="im-value invest-net" id="inv-net">$0.00</div>
+          <div class="im-sub" id="inv-net-sub">still in investments</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="card chart-card">
+        <div class="chart-title">Income</div>
+        <div class="chart-wrap" id="income-chart-wrap">
+          <canvas id="income-chart"></canvas>
+        </div>
+      </div>
+      <div class="card chart-card">
+        <div class="chart-title">Expenses</div>
+        <div class="chart-wrap" id="expense-chart-wrap">
+          <canvas id="expense-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trends -->
+    <div class="card trends-card" id="trends-card">
+      <div class="trends-header">
+        <span class="chart-title">TRENDS</span>
+        <div class="trends-controls">
+          <div class="trends-legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#059669"></span>Income</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span>Expenses</span>
+            <button class="net-toggle-btn active" id="net-toggle-btn" onclick="toggleNet()">
+              <span class="legend-dash"></span>Net
+            </button>
+          </div>
+          <div class="gran-btns">
+            <button class="gran-btn preset" data-gran="daily"     onclick="setGranularity('daily')">Day</button>
+            <button class="gran-btn preset" data-gran="weekly"    onclick="setGranularity('weekly')">Week</button>
+            <button class="gran-btn preset active" data-gran="monthly" onclick="setGranularity('monthly')">Month</button>
+            <button class="gran-btn preset" data-gran="quarterly" onclick="setGranularity('quarterly')">Quarter</button>
+          </div>
+        </div>
+      </div>
+      <div class="trends-wrap">
+        <canvas id="trends-chart"></canvas>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- Bar Chart -->
+    <div class="card bar-card" id="bar-card">
+      <div class="bar-header">
+        <div class="bar-tabs">
+          <button class="tab active" id="bar-tab-cat" onclick="setBarTab('category')">By Category</button>
+          <button class="tab"        id="bar-tab-vs"  onclick="setBarTab('vs')">Income vs Expenses</button>
+        </div>
+        <div class="bar-controls">
+          <select id="bar-cat-filter" class="bar-cat-select" onchange="setBarCategory(this.value)">
+            <option value="all">All Categories</option>
+          </select>
+          <div class="gran-btns">
+            <button class="bar-gran-btn preset" data-gran="daily"     onclick="setBarGranularity('daily')">Day</button>
+            <button class="bar-gran-btn preset" data-gran="weekly"    onclick="setBarGranularity('weekly')">Week</button>
+            <button class="bar-gran-btn preset active" data-gran="monthly" onclick="setBarGranularity('monthly')">Month</button>
+            <button class="bar-gran-btn preset" data-gran="quarterly" onclick="setBarGranularity('quarterly')">Quarter</button>
+          </div>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <canvas id="bar-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Breakdown -->
+    <div class="card breakdown-card">
+      <div class="tab-row">
+        <button class="tab active" id="tab-income"  onclick="showBreakdown('income')">Income Breakdown</button>
+        <button class="tab"        id="tab-expense" onclick="showBreakdown('expense')">Expense Breakdown</button>
+      </div>
+      <table class="data-table" id="breakdown-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="num">Amount</th>
+            <th class="num">Share</th>
+            <th class="num">Transactions</th>
+          </tr>
+        </thead>
+        <tbody id="breakdown-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card tx-card">
+      <div class="tx-header">
+        <h3>Transactions</h3>
+        <div class="tx-controls">
+          <input  type="text"   id="tx-search"   placeholder="Search…" oninput="debounceSearch()" />
+          <select id="cat-filter" onchange="filterCat()">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table tx-table">
+          <thead>
+            <tr>
+              <th class="th-sort" onclick="setSort('date')">Date <span class="sort-icon" id="sort-icon-date">⇅</span></th>
+              <th>Bank</th>
+              <th>Description</th>
+              <th class="num th-sort" onclick="setSort('amount')">Amount <span class="sort-icon" id="sort-icon-amount">⇅</span></th>
+              <th>Category</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tx-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+  </div><!-- /dashboard -->
+
+</main>
+
+<!-- ── UPLOAD MODAL ─────────────────────────────────────────────────────────── -->
+<div id="upload-modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Upload CSV Files</h2>
+      <button class="icon-btn" onclick="closeUploadModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="drop-zone" class="drop-zone"
+           ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+           onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon">⇪</div>
+        <p>Drop CSV files here or click to browse</p>
+        <p class="drop-hint">Supports Chase and Bank of America exports</p>
+        <input type="file" id="file-input" accept=".csv" multiple
+               onchange="handleFileSelect(event)" style="display:none" />
+      </div>
+      <div id="upload-results"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="closeUploadModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SIMILAR MODAL ────────────────────────────────────────────────────────── -->
+<div id="similar-modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Apply to Similar Transactions</h2>
+      <button class="icon-btn" onclick="closeSimilarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="pattern-row">
+        Matched pattern: <code id="sim-pattern"></code>
+      </div>
+      <div id="sim-list" class="sim-list"></div>
+      <div class="sim-controls">
+        <label class="ctrl-label">
+          Assign category
+          <select id="sim-cat"></select>
+        </label>
+        <label class="toggle-wrap inline">
+          <input type="checkbox" id="save-rule" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-label">Remember this rule for future imports</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot space-between">
+      <button class="btn btn-ghost" onclick="closeSimilarModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyMass()">Apply to Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RULES MODAL ──────────────────────────────────────────────────────────── -->
+<div id="rules-modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Saved Category Rules</h2>
+      <button class="icon-btn" onclick="closeRulesModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="rules-hint">These rules auto-apply when you upload new CSVs.
+         Longer patterns take priority.</p>
+      <table class="data-table" id="rules-table">
+        <thead>
+          <tr><th>Pattern</th><th>Category</th><th></th></tr>
+        </thead>
+        <tbody id="rules-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="closeRulesModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" class="overlay hidden" onclick="closeAllModals()"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
